@@ -7,6 +7,7 @@ on:
   pull_request:
     branches:
       - main
+#unlucky 
 
 jobs:
   lint:
@@ -23,9 +24,11 @@ jobs:
 
     - name: Install dependencies
       run: npm install
+      working-directory: ./client
 
     - name: Run ESLint for JavaScript/React
       run: npm run lint
+      working-directory: ./client
 
     - name: Set up Python
       uses: actions/setup-python@v2
@@ -34,6 +37,8 @@ jobs:
 
     - name: Install pip dependencies
       run: pip install -r requirements.txt
+      working-directory: ./backend
 
     - name: Run flake8 for Python
       run: flake8
+      working-directory: ./backend
