@@ -2,3 +2,4 @@
 *.jpg
 results
 images
+__pycache__
