@@ -6,3 +6,4 @@ googletrans==4.0.0-rc1
 opencv-python
 manga-ocr
 black
+easyocr
