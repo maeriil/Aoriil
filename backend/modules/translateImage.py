@@ -10,29 +10,25 @@ SUPPORTED_LANG = {
 
 translator = Translator()
 
-# TODO make this more general so it supports multiple lang
-def generatePytesseractConfig(sourceLang: str) -> str:
-    return r"--oem 3 --psm 5 -l jpn_vert"
 
-# TODO this will call the text extractor module
-def extractTextFromImage (image):
-    # do something here
-    return ""
+def translate_to_destination_lang(untranslated: str, source_lang: str) -> str:
+    """ """
+    if isinstance(untranslated, str):
+        if source_lang == "japanese":
+            return _translate_japanese_string_to_dest_string(untranslated)
 
 
-# assume that the image only constains text and NO other backgrounds
-def translateImageToString (image, sourceLang: str):
-    pytesseract_config = r"--oem 3 --psm 5 -l jpn_vert"
-
-    # Add error handling here if required
-    textContents = pytesseract.image_to_string(image, pytesseract_config)
-
-    return textContents
+# ============================================================================
+"""
+Below contains @hidden methods
+"""
 
 
 # TODO
 # - Work on error handling in case translation to destLang fails
-def translateJapaneseStringToDestString(japaneseString: str, destLang: str = 'english') -> str:
+def _translate_japanese_string_to_dest_string(
+    japaneseString: str, destLang: str = "english"
+) -> str:
     """
     Parameters
     ----------
@@ -50,8 +46,36 @@ def translateJapaneseStringToDestString(japaneseString: str, destLang: str = 'en
     jpGoogleTrnsCode = SUPPORTED_LANG["japanese"]
     destGoogleTrnsCode = SUPPORTED_LANG[destLang]
 
+    if japaneseString.strip() == "":
+        return ""
+
     translatedEnglishStr = translator.translate(
         japaneseString, src=jpGoogleTrnsCode, dest=destGoogleTrnsCode
     )
-
     return translatedEnglishStr.text
+
+
+# ============================================================================
+"""
+Below contains @deprecated methods
+"""
+
+
+def _generate_pytesseract_config(sourceLang: str) -> str:
+    """
+    @deprecated
+    """
+    return r"--oem 3 --psm 5 -l jpn_vert"
+
+
+# assume that the image only constains text and NO other backgrounds
+def _translate_image_to_string(image, sourceLang: str):
+    """
+    @deprecated
+    """
+    pytesseract_config = r"--oem 3 --psm 5 -l jpn_vert"
+
+    # Add error handling here if required
+    textContents = pytesseract.image_to_string(image, pytesseract_config)
+
+    return textContents

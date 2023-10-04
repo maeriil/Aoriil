@@ -1,77 +1,114 @@
 import cv2
 import numpy as np
+import textwrap
 
-class CoreImage:
-    def __init__ (self, image):
-        self.image = image
 
-    def sharpenImage (self):
-        # Convert the image to grayscale format
-        tempImg = self.image.copy()
-        tempImg = cv2.cvtColor(tempImg, cv2.COLOR_BGR2GRAY)
+def sharpen_image(image: np.array) -> np.array:
+    """ """
+    pass
 
-        # Add blur to the image
-        # TODO extract the gaussian kernal to global scope and make it a constant
-        # TODO Consider using median blur instead to reduce noise
-        tempImg = cv2.GaussianBlur(tempImg, (5, 5), 0)    
 
-        # Using otsu threshold to convert image to binary image
-        tempImg = cv2.threshold(
-            tempImg, 0, 255,
-            cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)[1]
-        
-        # Attempt to remove noise from the image
-        # extract the kernal matrix to global scope and make it a constant
-        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
+def binarize_image(image: np.array) -> np.array:
+    """ """
+    pass
 
-        # Apply Errosion then dialation using morphologyEx
-        tempImg = cv2.morphologyEx(tempImg, cv2.MORPH_OPEN, kernel, iterations=1)
 
-        # Invert the image colours
-        tempImg = 255 - tempImg
+def inlarge_image(image: np.array, configs: list) -> np.array:
+    """ """
+    pass
 
-        # cv2.imshow("invert image ", tempImg)
-        # cv2.waitKey()
 
-        return tempImg
+def shrink_image(image: np.array, configs: list) -> np.array:
+    """ """
+    pass
 
-    # def cropImage (self, contour):
-    #     print('init cropImage method')
 
-    #     x, y, width, height = cv2.boundingRect(contour)
-    #     croppedImage = self.image[y:y+height, x:x+width]
+def crop_image(image, box: list):
+    """ """
+    (top_left, top_right, bottom_right, bottom_left) = box
+    x1, y1, x2, y2 = (
+        int(top_left[0]),
+        int(top_left[1]),
+        int(top_right[0]),
+        int(bottom_left[1]),
+    )
 
-    #     return croppedImage
-    
+    cropped = image[y1:y2, x1:x2]
 
-    def getTextSections(self, sharpenedImage):
-        print('init getTextSection method')
-        # temporaryImage = self.image.copy()
-        # temporaryImage = self.sharpenImage()
-        # ret, ctrs, _ = cv2.findContours(temporaryImage, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        # sections = []
-        # for ctr in ctrs:
-        #     x, y, w, h = cv2.boundingRect(ctr)
-        #     section = self.cropImage(self.image, ctr)
-        #     sections.append(section)
+    return cropped
 
-        if sharpenedImage is None:
-            print("did not pass parameters?")
-            return
 
-        contours, hierarchy = cv2.findContours(
-            sharpenedImage,
-            cv2.RETR_EXTERNAL,
-            cv2.CHAIN_APPROX_SIMPLE
+def draw_text(box: tuple, translated_text: str) -> np.array:
+    """ """
+    (top_left, top_right, bottom_right, bottom_left) = box
+    (img_width, img_height) = (
+        int(top_right[0] - top_left[0]),
+        int(bottom_right[1] - top_right[1]),
+    )
+    text_image = np.full(
+        (img_height, img_width, 3), 255, np.uint8
+    )  # white img
+
+    text = " ".join(translated_text.strip().split()).replace("\n", ". ")
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    font_scale = 1
+    font_color = (0, 0, 0)  # Black color in BGR
+    thickness = 1
+    max_width = img_width
+    print("maximum width is ", max_width)
+
+    lines = []
+    words = text.split()
+    while words:
+        line = words.pop(0)
+        while (
+            words
+            and cv2.getTextSize(
+                line + " " + words[0], font, font_scale, thickness
+            )[0][0]
+            < max_width
+        ):
+            line += " " + words.pop(0)
+        lines.append(line)
+    wrapped_lines = lines
+
+    total_text_height = len(wrapped_lines) * int(
+        cv2.getTextSize(text, font, font_scale, thickness)[0][1]
+    )
+
+    # Calculate the starting y-coordinate to vertically center the wrapped text
+    start_y = (text_image.shape[0] - total_text_height) // 2
+
+    # Display the wrapped text on the image
+    for line in wrapped_lines:
+        text_width = cv2.getTextSize(line, font, font_scale, thickness)[0][0]
+        start_x = (text_image.shape[1] - text_width) // 2
+        cv2.putText(
+            text_image,
+            line,
+            (start_x, start_y),
+            font,
+            font_scale,
+            font_color,
+            thickness,
+        )
+        start_y += int(
+            cv2.getTextSize(line, font, font_scale, thickness)[0][1]
         )
 
-        # for contour in contours:
-        #     # print('countour is ', contour)
-        #     x, y, width, height = cv2.boundingRect(contour)
-        #     cv2.rectangle(sharpenedImage, (x, y), (x + width, y + height), (0, 255, 255), 2)
-        
-        # cv2.imshow('sharpen image ', sharpenedImage)
-        # cv2.waitKey()
+    return text_image
 
-        return contours, hierarchy
 
+def replace_image_section(image, text_image, box):
+    """ """
+    (top_left, top_right, bottom_right, bottom_left) = box
+    dimension = (top_right[0] - top_left[0], bottom_right[1] - top_right[1])
+    (x_offset, y_offset) = top_left
+    x_offset = int(x_offset)
+    y_offset = int(y_offset)
+    image[
+        y_offset : y_offset + text_image.shape[0],
+        x_offset : x_offset + text_image.shape[1],
+    ] = text_image
+
+    return image
