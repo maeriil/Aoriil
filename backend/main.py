@@ -36,7 +36,6 @@ text_sections = textdetection.get_text_sections(image, source_lang)
 destination_image = image.copy()
 
 for section in text_sections:
-    print("============= Starting section =============")
     (box, current_text, confidence) = section
     cropped_section = coreimage.crop_image(image, box)
 
