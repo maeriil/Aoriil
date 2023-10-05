@@ -1,5 +1,6 @@
 from googletrans import Translator
 import pytesseract
+import httpx
 import numpy
 
 SUPPORTED_LANG = {
@@ -8,7 +9,8 @@ SUPPORTED_LANG = {
     "korean": "ko",
 }
 
-translator = Translator()
+max_timeout = httpx.Timeout(5)
+translator = Translator(timeout=max_timeout)
 
 
 def translate_to_destination_lang(untranslated: str, source_lang: str) -> str:

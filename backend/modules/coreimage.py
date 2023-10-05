@@ -51,7 +51,7 @@ def draw_text(box: tuple, translated_text: str) -> np.array:
 
     text = " ".join(translated_text.strip().split()).replace("\n", ". ")
     font = cv2.FONT_HERSHEY_SIMPLEX
-    font_scale = 1
+    font_scale = 0.5
     font_color = (0, 0, 0)  # Black color in BGR
     thickness = 1
     max_width = img_width
