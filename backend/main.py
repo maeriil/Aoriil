@@ -8,15 +8,17 @@ import cv2
 import pytesseract
 import os
 import numpy as np
+from contextlib import redirect_stdout
 
 # reader = easyocr.Reader(['ja', 'en'], gpu = True)
-MOCKIMAGEPATH = "images/japanese5.png"
+MOCKIMAGEPATH = "images/japanese6.png"
 MOCKIMAGESAVEPATH = "results/"
 MOCKSECTIONDATAOUTPUTPATH = "results/data.txt"
 mock_image = cv2.imread(MOCKIMAGEPATH)
 mock_lang = "japanese"
 pytesseract_config = r"--oem 3 --psm 5 -l jpn_vert"
 _section_val = 0
+
 
 # Setup Mock Images and functions here
 def __display_image(image):
@@ -28,7 +30,8 @@ def __resize_image(image, ratio=0.5):
     cv2.resize(image, (0, 0), fx=ratio, fy=ratio)
     return image
 
-def __write_to_file (image, name):
+
+def __write_to_file(image, name):
     cv2.imwrite(os.path.join(MOCKIMAGESAVEPATH, name), image)
 
 
@@ -42,8 +45,8 @@ text_sections = textdetection.get_text_sections(image, source_lang)
 destination_image = image.copy()
 mock_image = textdetection._draw_text_borders(mock_image, text_sections)
 
-with open(MOCKSECTIONDATAOUTPUTPATH, "w", encoding='utf-8') as file:
-    for (box, text, confidence) in text_sections:
+with open(MOCKSECTIONDATAOUTPUTPATH, "w", encoding="utf-8") as file:
+    for box, text, confidence in text_sections:
         (tl, tr, br, bl) = box
         box_format = f"[[{','.join(str(v) for v in tl)}], [{','.join(str(v) for v in tr)}], [{','.join(str(v) for v in br)}], [{','.join(str(v) for v in bl)}]]"
         file.write(box_format + f" {text}" + f" {str(confidence)}\n")
@@ -51,17 +54,24 @@ with open(MOCKSECTIONDATAOUTPUTPATH, "w", encoding='utf-8') as file:
 # manual methods
 __write_to_file(mock_image, "border.png")
 
-# new_text_sections = textdetection._merge_overlapping_text_borders(text_sections)
-# updated_border_img = textdetection._draw_text_borders(updated_border_img, new_text_sections)
+with open("out.txt", "w") as f:
+    with redirect_stdout(f):
+        new_text_sections = textdetection._merge_overlapping_text_borders(
+            text_sections
+        )
+        # new_text_sections = textdetection._merge_overlapping_text_borders(new_text_sections)
+        updated_border_img = textdetection._draw_text_borders(
+            updated_border_img, new_text_sections
+        )
 
-# with open("results/data2.txt", "w", encoding='utf-8') as file:
-#     for (box, text, confidence) in new_text_sections:
-#         (tl, tr, br, bl) = box
-#         box_format = f"[[{','.join(str(v) for v in tl)}], [{','.join(str(v) for v in tr)}], [{','.join(str(v) for v in br)}], [{','.join(str(v) for v in bl)}]]"
-#         file.write(box_format + f" {text}" + f" {str(confidence)}\n")
+with open("results/data2.txt", "w", encoding="utf-8") as file:
+    for box, text, confidence in new_text_sections:
+        (tl, tr, br, bl) = box
+        box_format = f"[[{','.join(str(v) for v in tl)}], [{','.join(str(v) for v in tr)}], [{','.join(str(v) for v in br)}], [{','.join(str(v) for v in bl)}]]"
+        file.write(box_format + f" {text}" + f" {str(confidence)}\n")
 
-# __write_to_file(updated_border_img, "border-fix.png")
-# __display_image(mock_image)
+__write_to_file(updated_border_img, "border-fix.png")
+__display_image(mock_image)
 
 
 exit()
