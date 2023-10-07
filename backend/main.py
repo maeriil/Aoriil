@@ -1,7 +1,8 @@
+import utilities.helpers.stringHelpers as strutil
+import utilities.helpers.imageHelpers as imgutil
 import modules.textdetection as textdetection
 import modules.translateimage as translateimage
 import modules.coreimage as coreimage
-import utilities.helpers.stringHelpers as strutil
 import cv2
 
 # mock Imports
@@ -144,19 +145,13 @@ for section in new_text_sections:
     # )
     # __display_image(_mock_cropped_section)
     # Add error handling here if required
-    current_text = pytesseract.image_to_string(
-        cropped_section, config=pytesseract_config
-    )
-    current_text = strutil.remove_trailing_whitespace(current_text).replace(
-        " ", ""
-    )
-    print(current_text)
+
     # print('current text ', current_text)
 
-    translated_text = translateimage.translate_to_destination_lang(
-        current_text, source_lang
-    )
-    print(translated_text)
+    # translated_text = translateimage.translate_to_destination_lang(
+    #     current_text, source_lang
+    # )
+    # print(translated_text)
     # translated_text = current_text
     # print('translate', translated_text)
     # print(f"message translated from {current_text} to {translated_text}")
@@ -167,15 +162,46 @@ for section in new_text_sections:
     # convert destination image to
 
     # translated_image = coreimage.draw_text(box, translated_text, _mock_cropped_section)
-    destination_image = coreimage.insert_text(
-        translated_text, destination_image, box
-    ).copy()
+    # destination_image = coreimage.insert_text(
+    #     translated_text, destination_image, box
+    # ).copy()
     # __display_image(destination_image)
     # cv2.imshow('mock ', _mock_cropped_section) # REMOVE AFTER
     # __display_image(translated_image) # REMOVE AFTER
     # cv2.waitKey()
 
     # coreimage.replace_image_section(destination_image, translated_image, box)
+
+print("finished  updating the image")
+__display_image(destination_image)
+destination_image_pil = imgutil.convert_cv2_to_pil(destination_image)
+
+_section_val = 0
+for section in new_text_sections:
+    _section_val += 1
+    print(f"=================SECTION{_section_val}=================")
+    (box, current_text, confidence) = section
+    cropped_section = coreimage.crop_image(image, box)
+    current_text = pytesseract.image_to_string(
+        cropped_section, config=pytesseract_config
+    )
+    current_text = strutil.remove_trailing_whitespace(current_text).replace(
+        " ", ""
+    )
+    print(current_text)
+    translated_text = translateimage.translate_to_destination_lang(
+        current_text, source_lang
+    )
+
+    print(translated_text)
+    destination_image_pil = coreimage.insert_text(
+        translated_text, destination_image_pil, box
+    )
+    # destination_image_pil.show()
+
+# convert destination image back to original
+destination_image = imgutil.convert_pil_to_cv2(destination_image_pil)
+print("finished adding text to image")
 
 # display section
 cv2.imshow("Untranslated image ", image)

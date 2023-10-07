@@ -1,4 +1,18 @@
+import cv2
+import numpy as np
+
 from functools import singledispatch
+from PIL import Image
+
+
+def convert_cv2_to_pil(image: np.array) -> Image.Image:
+    conv_image_color = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    image_pil = Image.fromarray(conv_image_color)
+    return image_pil
+
+
+def convert_pil_to_cv2(image: Image.Image) -> np.array:
+    return np.asarray(image)
 
 
 def unpack_box(box: list) -> (list, list, list, list):
