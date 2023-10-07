@@ -152,26 +152,37 @@ def calculate_width(string: str) -> int:
     return 15
 
 
-def insert_text(translated_text, image):
+def insert_text(translated_text, image, box):
     # convert the provided image to PIL image
     conv_image_color = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     image_pil = Image.fromarray(conv_image_color)
 
-    image_pil = insert_text_to_pil_img(translated_text, image_pil)
+    image_width = imgutil.calculate_box_width(box)
+    image_height = imgutil.calculate_box_height(box)
+    top_left, _, _, _ = imgutil.unpack_box(box)
+
+    image_pil = insert_text_to_pil_img(
+        translated_text, image_pil, image_width, image_height, top_left
+    )
 
     return np.asarray(image_pil)
 
 
-def insert_text_to_pil_img(translated_text, image, padding=2):
-    image_width = image.width
-    image_height = image.height
+def insert_text_to_pil_img(
+    translated_text, image, image_width, image_height, start_point, padding=2
+):
+    # image_width = image.width
+    # image_height = image.height
 
     # TODO: we need to export the following default properties outside of
     # this file so we can change it/add more later accordingly
+    (x, y) = start_point
     font_size = 12
     font_type = "utilities/fonts/Wild-Words-Roman.ttf"
     font_color = "#000"
     font_thickness = 1
+
+    print(f"x is {x}, y is {y}")
 
     # first make sure the translated_text doesnt have unnecessary new lines
     translated_text = strutil.remove_trailing_whitespace(translated_text)
@@ -188,10 +199,13 @@ def insert_text_to_pil_img(translated_text, image, padding=2):
 
     # flip the image and call the same function
     if is_vertical_layout_needed:
-        print(f"dimensions are width: {image.width} , height: {image.height}")
         rotated_image = image.rotate(90, expand=True)
         new_rotated_image = insert_text_to_pil_img(
-            translated_text, rotated_image
+            translated_text,
+            rotated_image,
+            image_height,
+            image_width,
+            start_point,
         )
         image = new_rotated_image.rotate(270, expand=True)
     else:
@@ -209,9 +223,10 @@ def insert_text_to_pil_img(translated_text, image, padding=2):
 
         total_text_height = (text_height + padding) * len(content)
         y_offset = math.floor((image_height - total_text_height) / 2)
+        print("y offset is ", y_offset)
 
         for line in content:
-            text_box = drawing_img.textbbox((0, 0), line, text_font)
+            text_box = drawing_img.textbbox((x, y), line, text_font)
             line_width, line_height = get_text_dimensions(line, text_font)
 
             # line_width = imgutil.calculate_width(text_box[2], text_box[0])
@@ -220,7 +235,12 @@ def insert_text_to_pil_img(translated_text, image, padding=2):
             x_offset = math.floor((image_width - line_width - padding * 2) / 2)
 
             drawing_img.text(
-                (x_offset, y_offset), line, font=text_font, fill="#000"
+                (x + x_offset, y + y_offset),
+                line,
+                font=text_font,
+                fill="#000",
+                stroke_width=2,
+                stroke_fill="white",
             )
             y_offset += line_height + padding
 

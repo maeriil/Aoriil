@@ -160,16 +160,22 @@ for section in new_text_sections:
     # translated_text = current_text
     # print('translate', translated_text)
     # print(f"message translated from {current_text} to {translated_text}")
+    coreimage.replace_image_section(
+        destination_image, _mock_cropped_section, box
+    )
+
+    # convert destination image to
 
     # translated_image = coreimage.draw_text(box, translated_text, _mock_cropped_section)
-    translated_image = coreimage.insert_text(
-        translated_text, _mock_cropped_section
-    )
+    destination_image = coreimage.insert_text(
+        translated_text, destination_image, box
+    ).copy()
+    # __display_image(destination_image)
     # cv2.imshow('mock ', _mock_cropped_section) # REMOVE AFTER
     # __display_image(translated_image) # REMOVE AFTER
     # cv2.waitKey()
 
-    coreimage.replace_image_section(destination_image, translated_image, box)
+    # coreimage.replace_image_section(destination_image, translated_image, box)
 
 # display section
 cv2.imshow("Untranslated image ", image)
