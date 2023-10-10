@@ -3,12 +3,28 @@ import numpy as np
 import easyocr
 import math
 
+import utilities.helpers.imageHelpers as imgutil
+import utilities.helpers.stringHelpers as strutil
+
 readers = {
-    "japanese": easyocr.Reader(["ja", "en"], gpu=True),
+    "japanese": easyocr.Reader(["ja"], gpu=False),
     # 'korean': easyocr.Reader(['ko', 'en'], gpu = True),
     # 'chinese_sim': easyocr.Reader(['ch_sim', 'en'], gpu = True),
 }
 
+
+def do_something (image, box_list):
+    for (box, text, confidence) in box_list:
+        (tl, tr, br, bl) = imgutil.unpack_box(box)
+        x_min = tl[0]
+        x_max = tr[0]
+        y_min = tl[1]
+        y_max = bl[1]
+
+        result = readers["japanese"].recognize(image, [[x_min, x_max, y_min, y_max]], [box])
+        # print('Finding result')
+        # print(result)
+        print('[Done]')
 
 def _draw_text_borders(image: np.array, borders_list: list) -> np.array:
     """ """
@@ -47,11 +63,169 @@ def _get_text_borders(
         )
 
 
+def get_sections (image: np.array, source_lang: str =  "japanese") -> (list, list):
+    """"""
+    if image is None:
+        return
+    horz, _ = readers[source_lang].detect(image, width_ths=0.55, height_ths=0.55)
+    return horz[0]
+
 def confidence_average(confidence1, confidence2):
     """
     TODO: Improve this better
     """
     return (confidence1 + confidence2) / 2
+
+
+def generate_section_details(section: list) -> list:
+    return {"parent": section, "children": []}
+
+
+def add_to_parent_section(parent: list, child: list) -> list:
+    if "children" in parent:
+        parent["children"].append(child)
+        return parent
+    else:
+        raise ValueError("Did not provide valid parent")
+
+
+def merge_two_sections(section1: list, section2: list) -> list:
+    """"""
+    (section1_box, section1_text, section1_conf) = section1
+    (section2_box, section2_text, section2_conf) = section2
+
+    (section1_tl, section1_tr, _, section1_bl) = imgutil.unpack_box(
+        section1_box
+    )
+    (section2_tl, section2_tr, _, section2_bl) = imgutil.unpack_box(
+        section2_box
+    )
+
+    merged_tl_x = min(section1_tl[0], section2_tl[0])
+    merged_tr_x = max(section1_tr[0], section2_tr[0])
+    merged_tl_y = min(section1_tl[1], section2_tl[1])
+    merged_bl_y = max(section1_bl[1], section2_bl[1])
+    merged_text = section2_text + section1_text
+    merged_conf = confidence_average(section1_conf, section2_conf)
+    merged_section = [
+        [
+            [merged_tl_x, merged_tl_y],  # top left corner
+            [merged_tr_x, merged_tl_y],  # top right corner
+            [merged_tr_x, merged_bl_y],  # bottom right corner
+            [merged_tl_x, merged_bl_y],  # bottom left corner
+        ],
+        merged_text,
+        merged_conf,
+    ]
+
+    return merged_section
+
+
+def point_in_rectangle(point: list, rectangle: list) -> bool:
+    (tl, tr, br, bl) = imgutil.unpack_box(rectangle)
+    x1, y1, x2, y2 = tl[0], tl[1], br[0], br[1]
+    x, y = point[0], point[1]
+
+    if (x1 <= x and x <= x2) and (y1 <= y and y <= y2):
+        return True
+    return False
+
+
+def overlaps(section1: list, section2: list) -> bool:
+    """"""
+    (section1_box, _, _) = section1
+    (section2_box, _, _) = section2
+
+    (section1_tl, section1_tr, section1_br, section1_bl) = imgutil.unpack_box(
+        section1_box
+    )
+    (section2_tl, section2_tr, section2_br, section2_bl) = imgutil.unpack_box(
+        section2_box
+    )
+    # Assume section 1's coordinates overlaps with section 2
+    # Case1.1: There exists point inside the section2's rectangle.
+    is_inside_section2 = (
+        point_in_rectangle(section1_tl, section2)
+        or point_in_rectangle(section1_tr, section2)
+        or point_in_rectangle(section1_br, section2)
+        or point_in_rectangle(section1_bl, section2)
+    )
+    if is_inside_section2:
+        return True
+
+    # Case1.2: There exists point inside section1's rectangle.
+    is_inside_section1 = (
+        point_in_rectangle(section2_tl, section1)
+        or point_in_rectangle(section2_tr, section1)
+        or point_in_rectangle(section2_br, section1)
+        or point_in_rectangle(section2_bl, section1)
+    )
+    if is_inside_section1:
+        return True
+
+    # These two rectangles then dont overlap
+    return False
+
+
+def x_distance_diff_crisscross(section1: list, section2: list) -> float:
+    (section1_box, section1_text, section1_conf) = section1
+    (section2_box, section2_text, section2_conf) = section2
+
+    (section1_tl, section1_tr, section1_br, section1_bl) = imgutil.unpack_box(
+        section1_box
+    )
+    (section2_tl, section2_tr, section2_br, section2_bl) = imgutil.unpack_box(
+        section2_box
+    )
+    # Lets assume the section 2 is right of section 1
+    # we use section1's top_right_x, section2's top_left_x
+    x_difference_right = abs(section1_tr[0] - section2_tl[0])
+
+    # Lets assume the section 2 is left of section 1
+    # we use section1's top_left_x, section2's top_right_x
+    x_difference_left = abs(section1_tl[0], section2_tr[0])
+
+    # the real difference will be the smaller value of these two
+    # one of them will always be x_real_difference + box_width
+    x_real_difference = min(x_difference_left, x_difference_right)
+
+    return x_real_difference
+
+
+def merge_close_sections(sections: list, MAX_DIST_DIFF: float, MIN_OVERLAP_PERCENT: float) -> (list, list):
+    """"""
+    merged_sections = []
+    merged_sections_details = []
+
+    for basic_section in sections:
+        is_basic_section_merged = False
+        merge_section_index = 0
+
+        for merge_section in merged_sections:
+            if overlaps(basic_section, merge_section):
+                # think about what cases are invalid when two boxes overlaps?
+                # 1) if the two section's font size is completely different
+                # 2) if the merged section's dimensions / image dimensions 
+                # is greater than 40% (?), we dont merge it...
+                pass
+            elif section_completely_above(basic_section, merge_section):
+                pass
+            elif section_completely_below(basic_section, merge_section):
+                pass
+            # they are in the similar y proximity
+            elif distance_diff(basic_section, merge_section) <= MAX_DIST_DIFF:
+                pass
+            else:
+                # should tech never reach here
+                pass
+            merge_section_index += 1
+
+        if not is_basic_section_merged:
+            merged_sections.append(basic_section)
+            merged_sections_details.append(
+                generate_section_details(basic_section)
+            )
+    return merged_sections, merged_sections_details
 
 
 def _merge_overlapping_text_borders(boxlist: list) -> list:
@@ -213,10 +387,10 @@ def _merge_overlapping_text_borders(boxlist: list) -> list:
                         return True
                     # it could be the case that we are accidently lcapturing
                     # a small box already inside a much larger box
-                    if mostlyInsideSection(
-                        section1_box, section2_box
-                    ) or mostlyInsideSection(section2_box, section1_box):
-                        return True
+                    # if mostlyInsideSection(
+                    #     section1_box, section2_box
+                    # ) or mostlyInsideSection(section2_box, section1_box):
+                    #     return True
 
         # case2: assume the largebox is below small_box
         else:
@@ -231,10 +405,10 @@ def _merge_overlapping_text_borders(boxlist: list) -> list:
                         section2_height,
                     ):
                         return True
-                    if mostlyInsideSection(
-                        section1_box, section2_box
-                    ) or mostlyInsideSection(section2_box, section1_box):
-                        return True
+                    # if mostlyInsideSection(
+                    #     section1_box, section2_box
+                    # ) or mostlyInsideSection(section2_box, section1_box):
+                    #     return True
 
         # if the vertical distance between them isn't too large
         # if the horizontal distance between them is not too large, and
@@ -243,24 +417,24 @@ def _merge_overlapping_text_borders(boxlist: list) -> list:
 
         MAXIMUM_HORIZONTAL_DIST_FOR_MERGE = 3
 
-        if section1_tl[1] in range(
-            section2_tl[1], section2_bl[1]
-        ) or section1_bl[1] in range(section2_tl[1], section2_bl[1]):
-            horizontal_dist = abs(section1_tr[0] - section2_tl[0])
-            if horizontal_dist <= MAXIMUM_HORIZONTAL_DIST_FOR_MERGE:
-                return True
-            horizontal_dist = abs(section1_tl[0] - section2_tr[0])
-            if horizontal_dist <= MAXIMUM_HORIZONTAL_DIST_FOR_MERGE:
-                return True
-        if section2_tl[1] in range(
-            section1_tl[1], section1_bl[1]
-        ) or section2_bl[1] in range(section1_tl[1], section1_bl[1]):
-            horizontal_dist = abs(section1_tr[0] - section2_tl[0])
-            if horizontal_dist <= MAXIMUM_HORIZONTAL_DIST_FOR_MERGE:
-                return True
-            horizontal_dist = abs(section1_tl[0] - section2_tr[0])
-            if horizontal_dist <= MAXIMUM_HORIZONTAL_DIST_FOR_MERGE:
-                return True
+        # if section1_tl[1] in range(
+        #     section2_tl[1], section2_bl[1]
+        # ) or section1_bl[1] in range(section2_tl[1], section2_bl[1]):
+        #     horizontal_dist = abs(section1_tr[0] - section2_tl[0])
+        #     if horizontal_dist <= MAXIMUM_HORIZONTAL_DIST_FOR_MERGE:
+        #         return True
+        #     horizontal_dist = abs(section1_tl[0] - section2_tr[0])
+        #     if horizontal_dist <= MAXIMUM_HORIZONTAL_DIST_FOR_MERGE:
+        #         return True
+        # if section2_tl[1] in range(
+        #     section1_tl[1], section1_bl[1]
+        # ) or section2_bl[1] in range(section1_tl[1], section1_bl[1]):
+        #     horizontal_dist = abs(section1_tr[0] - section2_tl[0])
+        #     if horizontal_dist <= MAXIMUM_HORIZONTAL_DIST_FOR_MERGE:
+        #         return True
+        #     horizontal_dist = abs(section1_tl[0] - section2_tr[0])
+        #     if horizontal_dist <= MAXIMUM_HORIZONTAL_DIST_FOR_MERGE:
+        #         return True
 
         return False
 

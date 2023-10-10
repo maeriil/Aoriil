@@ -55,3 +55,8 @@ def calculate_box_height(box) -> int:
     top_left, _, _, bottom_left = unpack_box(box)
 
     return calculate_height(top_left[1], bottom_left[1])
+
+def crop_image (image: np.array, start_pos: list, end_pos: list) -> np.array:
+    x1, y1 = start_pos[0], start_pos[1]
+    x2, y2 = end_pos[0], end_pos[1]
+    return image[y1:y2, x1:x2]

@@ -8,6 +8,8 @@ import math
 
 from PIL import Image, ImageFont, ImageDraw
 
+def calc_max_gap_dist (image: np.array) -> int:
+    return 20
 
 def sharpen_image(image: np.array) -> np.array:
     """ """

@@ -172,7 +172,7 @@ for section in new_text_sections:
 
     # coreimage.replace_image_section(destination_image, translated_image, box)
 
-print("finished  updating the image")
+print("finished updating the image")
 __display_image(destination_image)
 destination_image_pil = imgutil.convert_cv2_to_pil(destination_image)
 
