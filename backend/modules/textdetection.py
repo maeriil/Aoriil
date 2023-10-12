@@ -13,18 +13,21 @@ readers = {
 }
 
 
-def do_something (image, box_list):
-    for (box, text, confidence) in box_list:
+def do_something(image, box_list):
+    for box, text, confidence in box_list:
         (tl, tr, br, bl) = imgutil.unpack_box(box)
         x_min = tl[0]
         x_max = tr[0]
         y_min = tl[1]
         y_max = bl[1]
 
-        result = readers["japanese"].recognize(image, [[x_min, x_max, y_min, y_max]], [box])
+        result = readers["japanese"].recognize(
+            image, [[x_min, x_max, y_min, y_max]], [box]
+        )
         # print('Finding result')
         # print(result)
-        print('[Done]')
+        print("[Done]")
+
 
 def _draw_text_borders(image: np.array, borders_list: list) -> np.array:
     """ """
@@ -49,6 +52,21 @@ def _draw_text_borders(image: np.array, borders_list: list) -> np.array:
     return image
 
 
+def _draw_detect_borders(image, section):
+    if image is None or section is None:
+        return
+    border_color = (0, 255, 0)
+    border_pixel = 1
+    for xmin, xmax, ymin, ymax in section:
+        tl = (int(xmin), int(ymin))
+        br = (int(xmax), int(ymax))
+
+        cv2.rectangle(
+            image, tl, br, color=border_color, thickness=border_pixel
+        )
+    return image
+
+
 def _get_text_borders(
     image: np.array, source_lang: str = "japanese", configs: dict = {}
 ) -> list:
@@ -57,18 +75,23 @@ def _get_text_borders(
         return
     if not configs:
         return readers[source_lang].readtext(
-            image,
-            width_ths=0.55,
-            height_ths=0.55,
+            image, width_ths=0.55, height_ths=0.55, paragraph=True
         )
 
 
-def get_sections (image: np.array, source_lang: str =  "japanese") -> (list, list):
+def get_sections(
+    image: np.array, source_lang: str = "japanese"
+) -> (list, list):
     """"""
     if image is None:
         return
-    horz, _ = readers[source_lang].detect(image, width_ths=0.55, height_ths=0.55)
+    horz, _ = readers[source_lang].detect(
+        image,
+        width_ths=0.55,
+        height_ths=0.55,
+    )
     return horz[0]
+
 
 def confidence_average(confidence1, confidence2):
     """
@@ -192,7 +215,9 @@ def x_distance_diff_crisscross(section1: list, section2: list) -> float:
     return x_real_difference
 
 
-def merge_close_sections(sections: list, MAX_DIST_DIFF: float, MIN_OVERLAP_PERCENT: float) -> (list, list):
+def merge_close_sections(
+    sections: list, MAX_DIST_DIFF: float, MIN_OVERLAP_PERCENT: float
+) -> (list, list):
     """"""
     merged_sections = []
     merged_sections_details = []
@@ -205,7 +230,7 @@ def merge_close_sections(sections: list, MAX_DIST_DIFF: float, MIN_OVERLAP_PERCE
             if overlaps(basic_section, merge_section):
                 # think about what cases are invalid when two boxes overlaps?
                 # 1) if the two section's font size is completely different
-                # 2) if the merged section's dimensions / image dimensions 
+                # 2) if the merged section's dimensions / image dimensions
                 # is greater than 40% (?), we dont merge it...
                 pass
             elif section_completely_above(basic_section, merge_section):

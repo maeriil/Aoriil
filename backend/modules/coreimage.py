@@ -8,8 +8,11 @@ import math
 
 from PIL import Image, ImageFont, ImageDraw
 
-def calc_max_gap_dist (image: np.array) -> int:
-    return 20
+
+def calc_max_gap_dist(image: np.array) -> int:
+    height, width, channel = image.shape
+    return math.floor((7.5 * height) / 1000)
+
 
 def sharpen_image(image: np.array) -> np.array:
     """ """
@@ -131,14 +134,24 @@ def get_text_dimensions(text_string, font):
 
 
 def needs_vertical_layout(
-    string: str, width: int, height: int, font_type
+    string: str, width: int, height: int, font_type, padding
 ) -> (bool, bool):
     """"""
-    MAXIMUM_WIDTH_MULTIPLIER = 2
+    MAXIMUM_WIDTH_MULTIPLIER = 1.5
     longest_word = strutil.get_longest_word_in_string(string)
     text_width, text_height = get_text_dimensions(longest_word, font_type)
 
+    text_width = math.floor((width - padding * 2) / text_width)
+    content = textwrap.wrap(string, width=width, break_long_words=False)
+
+    total_text_height = (text_height + padding) * len(content)
+    y_offset = math.floor((height - total_text_height) / 2)
+
     if text_width > width * MAXIMUM_WIDTH_MULTIPLIER and height > width:
+        print("first case Vertical Layout needed")
+        return True, False
+    if y_offset < 0 and height > width:
+        print("main case? Vertical Layout needed")
         return True, False
     elif text_width > width and text_width <= width * MAXIMUM_WIDTH_MULTIPLIER:
         return False, True
@@ -154,13 +167,18 @@ def calculate_width(string: str) -> int:
     return 15
 
 
-def insert_text(translated_text, image, box) -> Image.Image:
+def insert_text(translated_text, image, box, font_size) -> Image.Image:
     image_width = imgutil.calculate_box_width(box)
     image_height = imgutil.calculate_box_height(box)
     top_left, _, _, _ = imgutil.unpack_box(box)
 
     image = insert_text_to_pil_img(
-        translated_text, image, image_width, image_height, top_left
+        translated_text,
+        image,
+        image_width,
+        image_height,
+        top_left,
+        font_size=font_size,
     )
 
     return image
@@ -172,12 +190,13 @@ def insert_text_to_pil_img(
     image_width,
     image_height,
     start_point,
+    font_size=12,
     padding=2,
 ) -> Image.Image:
     # TODO: we need to export the following default properties outside of
     # this file so we can change it/add more later accordingly
+    print(f"dimensions are {image_width}x{image_height}")
     (x, y) = start_point
-    font_size = 12
     font_type = "utilities/fonts/Wild-Words-Roman.ttf"
     font_color = "#000"
     font_thickness = 1
@@ -188,7 +207,7 @@ def insert_text_to_pil_img(
     translated_text = strutil.remove_trailing_whitespace(translated_text)
     text_font = ImageFont.truetype(font_type, font_size)
     is_vertical_layout_needed, remove_padding = needs_vertical_layout(
-        translated_text, image_width, image_height, text_font
+        translated_text, image_width, image_height, text_font, padding=padding
     )
 
     # determine which layout we will save the text as
@@ -206,6 +225,7 @@ def insert_text_to_pil_img(
             image_height,
             image_width,
             start_point,
+            font_size=font_size,
         )
         image = new_rotated_image.rotate(270, expand=True)
     else:
@@ -215,8 +235,12 @@ def insert_text_to_pil_img(
             padding = 0
 
         text_width, text_height = get_text_dimensions("W", text_font)
+        print(f"img width={image_width}, height={image_height}")
+        print(f"text width={text_width}, height={text_height}")
 
-        text_width = math.floor((image_width - padding * 2) / text_width)
+        text_width = math.ceil((image_width - padding * 2) / text_width)
+        print(f"updated text width={text_width}, height={text_height}")
+
         content = textwrap.wrap(
             translated_text, width=text_width, break_long_words=False
         )

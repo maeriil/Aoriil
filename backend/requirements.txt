@@ -7,3 +7,4 @@ opencv-python
 manga-ocr
 black
 easyocr
+google-cloud-translate==2.0.1

@@ -11,6 +11,6 @@ def covert_to_vertical_text(string: str) -> str:
 def get_longest_word_in_string(string: str) -> str:
     """"""
     words = string.split()
-    if len(words)  == 0:
+    if len(words) == 0:
         return ""
     return max(words, key=len)
