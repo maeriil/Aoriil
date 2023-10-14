@@ -66,8 +66,8 @@ def needs_vertical_text(box_width: int, box_height: int) -> bool:
     -------
     bool
         True if we need vertical text, False otherwise
-
     """
+
     ratio = box_width / box_height
 
     if ratio <= 0.2:
@@ -97,8 +97,8 @@ def get_text_dimensions(
 
     int
         The height of the string based on provided font
-
     """
+
     _, descent = font.getmetrics()
     text_width = font.getmask(text_string).getbbox()[2]
     text_height = font.getmask(text_string).getbbox()[3] + descent
@@ -156,8 +156,8 @@ def get_overflow_amount(
     int
         How much the text will overflow vertically comparing to the bounding
         box
-
     """
+
     # creates font with certain size
     font = ImageFont.truetype(font_path, font_size)
 
@@ -214,8 +214,8 @@ def overflow(
     bool
         True if text overflowed either horizontally or vertically,
         False otherwise
-
     """
+
     overflow_width, overflow_height = get_overflow_amount(
         text, box_width, box_height, font_size, font_path, padding, line_height
     )
@@ -268,8 +268,8 @@ def too_much_overflow(
         True if text overflowed vertically.
         True if text overflowed more than specified horizontal threshold.
         False otherwise
-
     """
+
     overflow_width, overflow_height = get_overflow_amount(
         text, box_width, box_height, font_size, font_path, padding, line_height
     )
@@ -338,35 +338,35 @@ def manage_text(
     box_height : int
         The maxmimum height of the bounding box of the text
 
-    font_size : int
+    font_size : int, optional
         The font size of the text. Default font size is set to 12 pixels
 
-    font_path : str
+    font_path : str, optional
         The font path for the custom font. Default font is Wild Words Normal
 
-    padding : int
+    padding : int, optional
         Left, right, top, bottom paddings to add while displaying the text.
         Default padding amount is 2 pixels.
 
-    line_height : int
+    line_height : int, optional
         Vertical line spacing between two lines of texts. Default value is 1px
 
-    vertical_text : bool
+    vertical_text : bool, optional
         Write the text vertically* if this is provided. Default value is False
         *Writing text vertically means display it rotated 90degrees
 
-    stroke_width : int
+    stroke_width : int, optional
         The width of the stroke outlines on each character. Default is 3px
 
-    stroke_color : str
+    stroke_color : str, optional
         The colour of the strokes to display on texts. Default is white color
 
     Returns
     -------
     Image.Image
         Pillow Image after the text has been added to it with specified props
-
     """
+
     height_scale = max(
         math.floor(image.height / DEFAULT_IMAGE_HEIGHT), LOWEST_SCALE_VAL
     )
@@ -435,7 +435,6 @@ def manage_text(
             )
             and line_height > MINIMUM_LINE_HEIGHT
         ):
-            print("Line height is ", line_height)
             line_height -= LINE_HEIGHT_INCREMENT_AMOUNT
 
     # if it still overflows here, then do nothing since we have tried enough
@@ -503,33 +502,33 @@ def insert_text(
     font : ImageFont.ImageFont
         The font which will be used to print the text to image
 
-    font_color : str
+    font_color : str, optional
         The font color which will be used to print the text to image.
         Default font color is always black (#000)
 
-    padding : int
+    padding : int, optional
         Left, right, top, bottom paddings to add while displaying the text.
         Default padding amount is 2 pixels.
 
-    line_height : int
+    line_height : int, optional
         Vertical line spacing between two lines of texts. Default value is 1px
 
-    vertical_text : bool
+    vertical_text : bool, optional
         Write the text vertically* if this is provided. Default value is False
         *Writing text vertically means display it rotated 90degrees
 
-    background_stroke_width : int
+    background_stroke_width : int, optional
         The width of the stroke outlines on each character. Default is 3px
 
-    background_stroke_color : str
+    background_stroke_color : str, optional
         The colour of the strokes to display on texts. Default is white color
 
     Returns
     -------
     Image.Image
         Pillow Image after the text has been added to it with specified props
-
     """
+
     drawing = ImageDraw.Draw(image)
     text_width, text_height = get_text_dimensions("W", font)
     text_width = math.ceil((box_width - padding * 2) / text_width)

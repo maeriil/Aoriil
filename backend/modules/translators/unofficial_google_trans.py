@@ -24,7 +24,7 @@ translator = Translator(timeout=max_timeout)
 # TODO: Needs to support at least Korean and Mandarin as well.
 # TODO: We don't want to limit destination translation to english, but other
 # languages as well. Add another parameter, dest_lang: str
-# TODO: We want to slowly add support for multiple languages, not just 
+# TODO: We want to slowly add support for multiple languages, not just
 # english, mandarin, korean and japanese.
 def translate_to_destination_lang(untranslated: str, source_lang: str) -> str:
     """
@@ -42,8 +42,8 @@ def translate_to_destination_lang(untranslated: str, source_lang: str) -> str:
     -------
     str
         The translated string in english
-
     """
+
     if isinstance(untranslated, str):
         if source_lang == "japanese":
             return translate_japanese_string_to_dest_string(untranslated)
@@ -66,7 +66,6 @@ def translate_japanese_string_to_dest_string(
     ----------
     string
         Translated string to destLang language
-
     """
 
     jp_Google_Trns_Code = SUPPORTED_LANG["japanese"]

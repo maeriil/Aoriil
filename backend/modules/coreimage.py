@@ -13,7 +13,8 @@ import math
 # TODO: The 7.5 is the current number that works best for our use cases, but
 # this needs to be removed and replaced by more logical
 def calc_max_gap_dist(image: np.array) -> int:
-    """
+    """Calculate the maximum gap distance
+
     This is the maximum distance (in pixels) to merge two bounding boxes
     This current 7.5 pixels is the maximum gap distance for image with
     1000 pixels height
@@ -27,7 +28,6 @@ def calc_max_gap_dist(image: np.array) -> int:
     -------
     int
         Maximum gap distance in integer rounded down
-
     """
 
     height, _, _ = image.shape
@@ -49,7 +49,6 @@ def sharpen_image(image: np.array) -> np.array:
     -------
     np.array
         The processed cv2 image
-
     """
 
     image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -77,7 +76,6 @@ def binarize_image(image: np.array) -> np.array:
     -------
     np.array
         The processed cv2 image
-
     """
     pass
 
@@ -96,7 +94,6 @@ def inlarge_image(image: np.array) -> np.array:
     -------
     np.array
         The inlarged cv2 image
-
     """
     pass
 
@@ -115,7 +112,6 @@ def shrink_image(image: np.array) -> np.array:
     -------
     np.array
         The shrinked cv2 image
-
     """
     pass
 
@@ -145,8 +141,8 @@ def replace_image_section(
     Returns
     -------
         The processed cv2 image
-
     """
+
     text_image_height = text_image.shape[0]
     text_image_width = text_image.shape[1]
 

@@ -1,23 +1,82 @@
+"""
+This module, fontdetection, contains functionalities to determine the font size
+of the original text in the image. 
+
+TODO This module contains many similarities between textinsertion module
+Revamp this module so we dont rewrite same variables/functions
+
+TODO This module does not work as intended. It does not calculate the original
+font size properly and the calculated size is not even remotely close. Figure
+out the issue and revamp this codebase. Priority is high
+
+"""
+
 import math
 import textwrap
 from PIL import ImageFont
 
+# TODO: Should Wild Words be the default font type? The default fond type
+# should be aggreable.
 DEFAULT_FONT_NAME = "wild-words"
+
+
+# TODO: We want to specify paths to font file outside of this file, in a
+# different location. This is an low priority enhancement
 DEFAULT_FONT_PATH = "utilities/fonts/Wild-Words-Roman.ttf"
+
+
+# TODO: What should be the default font size used on most mangas? Is 12
+# font size aggreable?
 DEFAULT_FONT_SIZE = 12
+
+
 DEFAULT_FONT_COLOR = "#000"
+
+
+# TODO: What should be the smallest font size used on most mangas? Is 10
+# font size aggreable?
 MINIMUM_FONT_SIZE = 10
+
+
+# TODO: What should be the largest font size used on most mangas? Is 30
+# font size aggreable?
 MAXIMUM_FONT_SIZE = 30
+
+
 MIN_IMG_SPACE_THRESHOLD = 5
 
 
-def get_text_dimensions(text_string, font):
-    ascent, descent = font.getmetrics()
+# TODO: This function is already implemented in textinsertion. Remove from here
+def get_text_dimensions(
+    text_string: str, font: ImageFont.ImageFont
+) -> (int, int):
+    """
+    Determines the total length of the text and total height of text based
+    of the font provided
+
+    Parameters
+    ----------
+    text_string : str
+        The string to determine width and height of
+
+    font : ImageFont.ImageFont
+        The font of the string to find width and height of
+
+    Returns
+    -------
+    int
+        The width of the string based on provided font
+
+    int
+        The height of the string based on provided font
+    """
+
+    _, descent = font.getmetrics()
 
     text_width = font.getmask(text_string).getbbox()[2]
     text_height = font.getmask(text_string).getbbox()[3] + descent
 
-    return [text_width, text_height]
+    return text_width, text_height
 
 
 def calculate_font_size(
@@ -25,17 +84,38 @@ def calculate_font_size(
     start_pos,
     end_pos,
     font_name=DEFAULT_FONT_NAME,
-    font_color=DEFAULT_FONT_COLOR,
-    font_thickness=1,
     scale=1,
 ):
-    """"""
+    """
+    Determine the font size of the provided text in the bounding box
+
+    Parameters
+    ----------
+    src_text : str
+        The text string's font size to determine
+
+    start_pos : list
+        The starting position point of the bounding box in original image
+
+    end_pos : list
+        The ending position point of the bounding box in original image
+
+    font_name : str, optional
+        The name of the font in the source text
+
+    scale : int, optional
+        The integer value to scale all text contents dimensions in image
+
+    Returns
+    -------
+    int
+        The calculated font size of the text given the bounding box dimensions
+    """
+
     image_width = abs(end_pos[0] - start_pos[0])
     image_height = abs(end_pos[1] - start_pos[1])
 
     # line_height_gap = interpolate()
-    line_height_gap = 2
-    line_width_gap = 2
     padding = 3
 
     font_size = DEFAULT_FONT_SIZE
@@ -63,7 +143,6 @@ def calculate_font_size(
 
     def is_font_size_small(curr_font_size: int) -> bool:
         total_height = calc_total_text_height(curr_font_size)
-        print("total height was calcd as ", total_height)
 
         if (
             image_height >= total_height
@@ -92,6 +171,4 @@ def calculate_font_size(
         else:
             return mid_font_size
 
-    # return min_in_range(mid_font_size) # ex if font sz = 14 and [12, 13, 14, 15] = [12], we return 12 font size
-    print("final size is ", mid_font_size)
     return mid_font_size

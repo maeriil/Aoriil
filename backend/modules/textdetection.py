@@ -40,8 +40,8 @@ def draw_text_borders(image: np.array, borders_list: list) -> np.array:
     -------
     np.array
         The cv2 image containing the borders of bounding boxes
-
     """
+
     border_color = (0, 255, 0)
     border_pixel = 1
 
@@ -74,8 +74,8 @@ def draw_text_section_borders(image: np.array, sections: list) -> np.array:
     -------
     np.array
         The cv2 image containing the borders of bounding boxes
-
     """
+
     border_color = (0, 255, 0)
     border_pixel = 1
     for xmin, xmax, ymin, ymax in sections:
@@ -102,7 +102,7 @@ def get_sections(image: np.array, source_lang: str = "japanese") -> list:
     image : np.array
         The cv2 image to detect characters from
 
-    source_lang : str
+    source_lang : str, optional
         The source language of the image. Default is japanese
 
     Returns
@@ -110,8 +110,8 @@ def get_sections(image: np.array, source_lang: str = "japanese") -> list:
     list
         The list containing sections for ever character it was able to detect
         The section looks like [xmin, xmax, ymin, ymax]
-
     """
+
     horz, _ = readers[source_lang].detect(
         image,
         width_ths=0.55,
@@ -136,7 +136,7 @@ def get_text_sections(image: np.array, source_lang: str = "japanese") -> list:
     image : np.array
         The cv2 image to detect characters from
 
-    source_lang : str
+    source_lang : str, optional
         The source language of the image. Default is japanese
 
     Returns
@@ -145,8 +145,8 @@ def get_text_sections(image: np.array, source_lang: str = "japanese") -> list:
         The list containing boxes, text and confidence of each detected section
         Each point in the box is a Point [x, y] in the image
         [[top_left, top_right, bottom_right, bottom_left], text, confidence]
-
     """
+
     return readers[source_lang].readtext(
         image, width_ths=0.55, height_ths=0.55, paragraph=True
     )
