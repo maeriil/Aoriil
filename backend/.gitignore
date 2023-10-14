@@ -1,6 +1,7 @@
 # project specific ignore files/folder
 *.png
 *.jpg
+*.txt
 results
 images
 

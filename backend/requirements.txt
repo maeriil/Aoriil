@@ -4,7 +4,6 @@ pytesseract
 numpy
 googletrans==4.0.0-rc1
 opencv-python
-manga-ocr
 black
 easyocr
 google-cloud-translate==2.0.1
