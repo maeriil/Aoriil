@@ -22,7 +22,7 @@ DEFAULT_FONT_NAME = "wild-words"
 
 # TODO: We want to specify paths to font file outside of this file, in a
 # different location. This is an low priority enhancement
-DEFAULT_FONT_PATH = "utilities/fonts/Wild-Words-Roman.ttf"
+DEFAULT_FONT_PATH = "src/utilities/fonts/Wild-Words-Roman.ttf"
 
 
 # TODO: What should be the default font size used on most mangas? Is 12
@@ -122,7 +122,7 @@ def calculate_font_size(
     font_path = DEFAULT_FONT_PATH
 
     if font_name == "wild-words":
-        font_path = "utilities/fonts/Wild-Words-Roman.ttf"
+        font_path = "src/utilities/fonts/Wild-Words-Roman.ttf"
 
     left = MINIMUM_FONT_SIZE * scale
     right = MAXIMUM_FONT_SIZE * scale

@@ -9,7 +9,7 @@ import cv2
 import numpy as np
 import easyocr
 
-import utilities.helpers.imageHelpers as imgutil
+from src.utilities.helpers.imageHelpers import unpack_box
 
 
 # TODO: Should this be initalized here or on the main file? Find better place
@@ -46,7 +46,7 @@ def draw_text_borders(image: np.array, borders_list: list) -> np.array:
     border_pixel = 1
 
     for box, _, _ in borders_list:
-        (tl, _, br, _) = imgutil.unpack_box(box)
+        (tl, _, br, _) = unpack_box(box)
 
         cv2.rectangle(
             image, tl, br, color=border_color, thickness=border_pixel

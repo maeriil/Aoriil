@@ -9,8 +9,7 @@ to correctly merge the text bounding boxes.
 
 """
 
-import utilities.helpers.imageHelpers as imgutil
-
+from src.utilities.helpers.imageHelpers import unpack_box
 import cv2
 import math
 import numpy as np
@@ -603,9 +602,7 @@ def is_section_overlap(section1: list, section2: list) -> bool:
         True if a section overlaps another, False otherwise
     """
 
-    section1_tl, section1_tr, section1_br, section1_bl = imgutil.unpack_box(
-        section1
-    )
+    section1_tl, section1_tr, section1_br, section1_bl = unpack_box(section1)
 
     is_inside_section2 = (
         is_point_in_rectangle(section1_tl, section2)
@@ -617,9 +614,7 @@ def is_section_overlap(section1: list, section2: list) -> bool:
     if is_inside_section2:
         return True
 
-    section2_tl, section2_tr, section2_br, section2_bl = imgutil.unpack_box(
-        section2
-    )
+    section2_tl, section2_tr, section2_br, section2_bl = unpack_box(section2)
 
     is_inside_section1 = (
         is_point_in_rectangle(section2_tl, section1)
@@ -652,7 +647,7 @@ def is_point_in_rectangle(point: list, rectangle: list) -> bool:
         True if a point lies in the rectangle, False otherwise
     """
 
-    (tl, _, br, _) = imgutil.unpack_box(rectangle)
+    (tl, _, br, _) = unpack_box(rectangle)
     x1, y1, x2, y2 = tl[0], tl[1], br[0], br[1]
     x, y = point[0], point[1]
 

@@ -309,7 +309,7 @@ def manage_text(
     box_width: int,
     box_height: int,
     font_size: int = 12,
-    font_path: str = "utilities/fonts/Wild-Words-Roman.ttf",
+    font_path: str = "src/utilities/fonts/Wild-Words-Roman.ttf",
     padding: int = 2,
     line_height: int = LINE_HEIGHT_DEFAULT_VAL,
     vertical_text: bool = False,
