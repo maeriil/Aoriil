@@ -1,12 +1,11 @@
 """
 This module, textinsertion, contains functionalities to insert translated text
 into the provided image. Note that all the images in this section will be using
-Pillow image in order to use custom ImageFont and easier writing methods. 
+Pillow image in order to use custom ImageFont and easier writing methods.
 
 """
 
 import math
-import numpy as np
 import textwrap
 
 from PIL import Image, ImageFont, ImageDraw

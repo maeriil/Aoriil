@@ -1,7 +1,7 @@
 """
 This module, coreimage, contains multiple image processing functions which
 can be used to process on the images. All the images are assumed to be of
-cv2 image format. 
+cv2 image format.
 
 """
 

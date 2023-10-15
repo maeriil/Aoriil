@@ -1,7 +1,7 @@
 """
 This module, google_translator, contains the Google Translate API functions
-used to translate the texts into english language. All credentials must be 
-exported out from this page for security reasons. 
+used to translate the texts into english language. All credentials must be
+exported out from this page for security reasons.
 
 """
 from google.cloud import translate_v2 as translate

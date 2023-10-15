@@ -1,6 +1,6 @@
 """
 This module, fontdetection, contains functionalities to determine the font size
-of the original text in the image. 
+of the original text in the image.
 
 TODO This module contains many similarities between textinsertion module
 Revamp this module so we dont rewrite same variables/functions
@@ -118,7 +118,6 @@ def calculate_font_size(
     # line_height_gap = interpolate()
     padding = 3
 
-    font_size = DEFAULT_FONT_SIZE
     font_path = DEFAULT_FONT_PATH
 
     if font_name == "wild-words":

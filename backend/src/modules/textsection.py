@@ -1,11 +1,11 @@
 """
 This module, textsection, contains two main classes, textsection and
 parenttextsection. The details of each class will contain on its own respective
-classes. 
+classes.
 
 Apart from the classes, this module also contains bounding box merging logics.
 The reason for these functions to exist is because EasyOCR is not always able
-to correctly merge the text bounding boxes. 
+to correctly merge the text bounding boxes.
 
 """
 
@@ -255,7 +255,7 @@ class parenttextsection:
         content += f"height={self.height}, font-size={self.font_size}, "
         content += f"font-type={self.font_type}]\n"
         content += f"\tOriginal=[{self.original_section.__str__()}]\n"
-        content += f"\tChildren=[\n"
+        content += "\tChildren=[\n"
 
         for child in self.children:
             content += f"\t\t[{child.__str__()}],\n"

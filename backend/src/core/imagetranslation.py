@@ -1,6 +1,6 @@
 """
 This module, imagetranslation, contains the main function that will translate
-the image to the destination language. 
+the image to the destination language.
 
 TODO Currently, the only supported destination lang is English. We want to be
 able to support multiple destination languages in future
