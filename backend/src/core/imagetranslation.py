@@ -16,6 +16,7 @@ We want to be able to support multiple languages in future.
 
 import cv2
 import numpy as np
+import os
 import pytesseract
 
 # Modules used
@@ -45,6 +46,18 @@ from src.utilities.helpers.imageHelpers import (
     calculate_box_height,
 )
 from src.utilities.helpers.stringHelpers import remove_trailing_whitespace
+
+
+# TODO: This needs to be somewhere outside of this file, perhaps in its own
+# file
+vertical_langauges = [
+    "japanese",
+    "mandarin",
+]
+
+
+def is_lang_vertical_lang(lang: str) -> bool:
+    return lang in vertical_langauges
 
 
 # TODO: Support for  multiple other source languages and destination languages
@@ -103,7 +116,10 @@ def translate(
     pytesseract_config = r"--oem 3 --psm 5 -l jpn_vert"
 
     # TODO: if language is part of vertical text, we MUST rotate it:
-    image = cv2.rotate(image, cv2.ROTATE_90_CLOCKWISE)
+    should_rotate = False
+    if is_lang_vertical_lang(src_lang):
+        should_rotate = True
+        image = cv2.rotate(image, cv2.ROTATE_90_CLOCKWISE)
 
     easyocr_sections = get_sections(image, source_lang=src_lang)
 
@@ -111,7 +127,7 @@ def translate(
     for x_min, x_max, y_min, y_max in easyocr_sections:
         text_sections.append(textsection("", [x_min, x_max, y_min, y_max], 12))
 
-    MAXIMUM_GAP_DIST = calc_max_gap_dist(image=image)
+    MAXIMUM_GAP_DIST = calc_max_gap_dist(image)
     merged_sections = []
 
     for section in text_sections:
@@ -170,27 +186,37 @@ def translate(
         )
 
     # TODO: if language is part of vertical text, we MUST rotate it:
-    rotate_img_height, rotate_img_width, _ = destination_image.shape
-    destination_image = cv2.rotate(
-        destination_image, cv2.ROTATE_90_COUNTERCLOCKWISE
-    )
-    image = cv2.rotate(image, cv2.ROTATE_90_COUNTERCLOCKWISE)
+    orig_img_height, orig_img_width, _ = destination_image.shape
+
+    if should_rotate:
+        destination_image = cv2.rotate(
+            destination_image, cv2.ROTATE_90_COUNTERCLOCKWISE
+        )
+        image = cv2.rotate(image, cv2.ROTATE_90_COUNTERCLOCKWISE)
 
     destination_image_pil = convert_cv2_to_pil(destination_image)
     for section in merged_sections:
+        start_pos = []
+        end_pos = []
         # TODO: if language is part of vertical text, we MUST rotate it
-        start_pos = [
-            section.start_pos[1],
-            rotate_img_width - section.end_pos[0],
-        ]
-        end_pos = [section.end_pos[1], rotate_img_width - section.start_pos[0]]
+        if should_rotate:
+            start_pos = [
+                section.start_pos[1],
+                orig_img_width - section.end_pos[0],
+            ]
+            end_pos = [
+                section.end_pos[1],
+                orig_img_width - section.start_pos[0],
+            ]
 
         cropped_section = crop_image(image, start_pos, end_pos)
+        current_text = ""
 
         # TODO: if language is part of vertical text, we must use diff config
-        current_text = pytesseract.image_to_string(
-            cropped_section, config=pytesseract_config
-        )
+        if is_lang_vertical_lang(src_lang):
+            current_text = pytesseract.image_to_string(
+                cropped_section, config=pytesseract_config
+            )
 
         current_text = remove_trailing_whitespace(current_text).replace(
             " ", ""
@@ -199,7 +225,7 @@ def translate(
         if current_text == "":
             continue
 
-        scale = round(rotate_img_height / 1000)
+        scale = round(orig_img_height / 1000)
         if scale == 0:
             scale = 1
 
@@ -231,4 +257,28 @@ def translate(
         )
 
     destination_image = convert_pil_to_cv2(destination_image_pil)
+
+    if show_borders:
+        destination_image = cv2.rotate(
+            destination_image, cv2.ROTATE_90_CLOCKWISE
+        )
+
+        for msection in merged_sections:
+            msection.draw_section(destination_image)
+
+        destination_image = cv2.rotate(
+            destination_image, cv2.ROTATE_90_COUNTERCLOCKWISE
+        )
+
+    # TODO: Add support for saving images to custom path location
+    # TODO: Add support for saving images as different file format and
+    # different name
+    if save_image:
+        directory = "results/"
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+        name = "translated_image.png"
+
+        cv2.imwrite(os.path.join(directory, name), destination_image)
+
     return destination_image
