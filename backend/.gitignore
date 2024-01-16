@@ -1,0 +1,20 @@
+# project specific ignore files/folder
+*.png
+*.jpg
+*.txt
+results
+images
+
+# Byte-compiled / optimized / DLL files
+**/__pycache__/
+__pycache__/
+
+# Sphinx documentation
+docs/_build/
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
